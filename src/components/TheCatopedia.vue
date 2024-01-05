@@ -2,19 +2,41 @@
 export default {
     data() {
         return {
-            API_KEY: '&api_key=live_o06gJnmR2h77OBzbMtpS5aV77EpsJAmRs6OjbCneIQk3w4FDpKYeIj00HrYtkgmC',
+            API_KEY: import.meta.env.VITE_API_KEY,
             limitOfCat: 12,
             catSearch: '',
+            suggestedCatSearch: [],
             catResults: [],
+            allCatResults: [],
             selectedCatResults: [],
             selectedCatImage: '',
             selectedCatImageWidth: '',
             selectedCatImageHeight: '',
             breedDetail: false,
             loadMoreButton: false,
+            eburImage: [
+                'https://cdn2.thecatapi.com/images/d8sbdRtLJ.jpg',
+                'https://cdn2.thecatapi.com/images/DZzcGANt5.jpg',
+                'https://cdn2.thecatapi.com/images/oLtx9gsxx.jpg'
+            ]
         };
     },
+    watch: {
+        catSearch() {
+            let filteredCat = this.allCatResults.filter((item) => {
+                let filteredCatName = item.name.toLowerCase().includes(this.catSearch)
+                return filteredCatName
+            });
+            this.suggestedCatSearch = filteredCat
+        }
+    },
     methods: {
+        async listAllCat() {
+            const resp = await fetch(`https://api.thecatapi.com/v1/breeds?limit=67${this.API_KEY}`);
+            const data = await resp.json();
+            let results = data;
+            this.allCatResults = results;
+        },
         async breedOfCat() {
             const resp = await fetch(`https://api.thecatapi.com/v1/breeds?limit=${this.limitOfCat}${this.API_KEY}`);
             const data = await resp.json();
@@ -51,12 +73,9 @@ export default {
             this.catResults = results;
         },
     },
-    watch: {},
     mounted() {
         this.breedOfCat();
-        // console.log(this.API_KEY)
-        // console.log(process.env.API_KEY)
-        // console.log(import.meta.env.BASE_URL_API)
+        this.listAllCat();
     },
 }
 </script>
@@ -66,38 +85,92 @@ export default {
             <div v-if="!breedDetail">
                 <form uk-grid>
                     <div class="uk-width-1-1">
-                        <input class="uk-input uk-form-large uk-border-rounded" type="text" placeholder="Search here..."
-                            v-model="catSearch" />
+                        <input class="uk-input uk-form-large uk-border-rounded" type="text"
+                            placeholder="Type cat breed here. ex: Balinese, Bengal, Persian etc" v-model="catSearch" />
                     </div>
-                    <p class="uk-margin-medium-bottom">{{ catSearch }}</p>
+                    <p class="uk-margin-small-top">
+                        <span v-if="catSearch">
+                            <span class="uk-text-bold">
+                                "{{ catSearch }}"
+                            </span> is it
+                        </span>
+                        <span v-if="catSearch" @click="breedOfCatDetail(i.id)" class="uk-margin-small-right"
+                            :class="{ 'uk-link': i.id }" v-for="i in suggestedCatSearch ">
+                            {{ index.name }}
+
+                        </span>
+                    </p>
                 </form>
-            </div>
-            <div v-if="!breedDetail"
-                class="uk-child-width-1-2@s uk-child-width-1-3@m uk-child-width-1-3@l uk-child-width-1-4@xl"
-                uk-grid="masonry: true;">
-                <div v-for="cat in catResults" :key="cat.id">
-                    <div class="uk-card uk-card-default uk-border-rounded" style="cursor: pointer"
-                        @click="breedOfCatDetail(cat.id)">
-                        <div class="uk-card-media-top">
-                            <img v-if="cat.image" class="uk-border-rounded" :src="cat.image.url" :width="cat.image.width"
-                                :height="cat.image.height" :alt="cat.name" :title="cat.name" />
-                        </div>
-                        <div class="uk-card-body">
-                            <!-- <p>{{ cat.id }}</p> -->
-                            <p class="uk-margin-remove uk-text-meta uk-text-primary">
-                                Origin: {{ cat.origin }}
-                            </p>
-                            <h3 class="uk-card-title uk-margin-small-top uk-text-bold">
-                                {{ cat.name }}
-                            </h3>
-                            <p>{{ cat.description }}</p>
-                        </div>
-                        <div class="uk-card-footer">
-                            <p class="uk-text-meta uk-margin-remove">
-                                Traits: {{ cat.temperament }}
-                            </p>
+                <div v-if="catSearch"
+                    class="uk-child-width-1-2@s uk-child-width-1-3@m uk-child-width-1-3@l uk-child-width-1-4@xl uk-margin-medium-top"
+                    uk-grid="masonry: true;">
+                    <div v-for="  cat   in   suggestedCatSearch  " :key="cat.id">
+                        <div class="uk-card uk-card-default uk-border-rounded" style="cursor: pointer"
+                            @click="breedOfCatDetail(cat.id)">
+                            <div class="uk-card-media-top">
+
+                                <div v-if="cat.image">
+
+                                    <img class="uk-border-rounded" :src="cat.image.url" :width="cat.image.width"
+                                        :height="cat.image.height" :alt="cat.name" :title="cat.name" />
+                                </div>
+
+                            </div>
+                            <div class="uk-card-body">
+                                <!-- <p>{{ cat.id }}</p> -->
+                                <p class="uk-margin-remove uk-text-meta uk-text-primary">
+                                    Origin: {{ cat.origin }}
+                                </p>
+                                <h3 class="uk-card-title uk-margin-small-top uk-text-bold">
+                                    {{ cat.name }}
+                                </h3>
+                                <p>{{ cat.description }}</p>
+                            </div>
+                            <div class="uk-card-footer">
+                                <p class="uk-text-meta uk-margin-remove">
+                                    Traits: {{ cat.temperament }}
+                                </p>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div v-else
+                    class="uk-child-width-1-2@s uk-child-width-1-3@m uk-child-width-1-3@l uk-child-width-1-4@xl uk-margin-medium-top"
+                    uk-grid="masonry: true;">
+                    <div v-for="  cat   in   catResults  " :key="cat.id">
+                        <div class="uk-card uk-card-default uk-border-rounded" style="cursor: pointer"
+                            @click="breedOfCatDetail(cat.id)">
+                            <div class="uk-card-media-top">
+                                <div v-if="cat.image">
+
+                                    <img class="uk-border-rounded" :src="cat.image.url" :width="cat.image.width"
+                                        :height="cat.image.height" :alt="cat.name" :title="cat.name" />
+                                </div>
+
+                            </div>
+                            <div class="uk-card-body">
+                                <!-- <p>{{ cat.id }}</p> -->
+                                <p class="uk-margin-remove uk-text-meta uk-text-primary">
+                                    Origin: {{ cat.origin }}
+                                </p>
+                                <h3 class="uk-card-title uk-margin-small-top uk-text-bold">
+                                    {{ cat.name }}
+                                </h3>
+                                <p>{{ cat.description }}</p>
+                            </div>
+                            <div class="uk-card-footer">
+                                <p class="uk-text-meta uk-margin-remove">
+                                    Traits: {{ cat.temperament }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="!catSearch" class="uk-text-center uk-margin-large-top">
+                    <button :class="{ loadMoreHidden: loadMoreButton }"
+                        class="uk-button uk-button-primary uk-button-large uk-border-rounded" @click="loadMore()">
+                        Load more
+                    </button>
                 </div>
             </div>
             <div v-else>
@@ -220,12 +293,6 @@ export default {
                         Back
                     </button>
                 </div>
-            </div>
-            <div v-if="!breedDetail" class="uk-text-center uk-margin-large-top">
-                <button :class="{ loadMoreHidden: loadMoreButton }"
-                    class="uk-button uk-button-primary uk-button-large uk-border-rounded" @click="loadMore()">
-                    Load more
-                </button>
             </div>
         </div>
     </div>
