@@ -2,7 +2,7 @@
 export default {
     data() {
         return {
-            API_KEY: '&api_key=live_o06gJnmR2h77OBzbMtpS5aV77EpsJAmRs6OjbCneIQk3w4FDpKYeIj00HrYtkgmC',
+            API_KEY: import.meta.env.VITE_API_KEY,
             limitOfCat: 12,
             catSearch: '',
             suggestedCatSearch: [],
