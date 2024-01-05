@@ -2,7 +2,7 @@
 export default {
     data() {
         return {
-            API_KEY: import.meta.env.VITE_API_KEY,
+            API_KEY: '&api_key=live_o06gJnmR2h77OBzbMtpS5aV77EpsJAmRs6OjbCneIQk3w4FDpKYeIj00HrYtkgmC',
             limitOfCat: 12,
             catSearch: '',
             suggestedCatSearch: [],
@@ -96,8 +96,7 @@ export default {
                         </span>
                         <span v-if="catSearch" @click="breedOfCatDetail(i.id)" class="uk-margin-small-right"
                             :class="{ 'uk-link': i.id }" v-for="i in suggestedCatSearch ">
-                            {{ index.name }}
-
+                            {{ i.name }}
                         </span>
                     </p>
                 </form>
